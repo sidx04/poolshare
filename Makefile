@@ -6,3 +6,6 @@ run: build
 
 test:
 	go test ./... -v
+
+delfoobar: 
+	rm -rf foobar
