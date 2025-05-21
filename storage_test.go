@@ -42,6 +42,10 @@ func TestStoreWrite(t *testing.T) {
 		t.Error(err)
 	}
 
+	if ok := s.HasKey(key); !ok {
+		t.Errorf("Expected to have [%s] key:\n", key)
+	}
+
 	b, _ := io.ReadAll(r)
 
 	fmt.Println(string(b))

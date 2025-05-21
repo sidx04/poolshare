@@ -85,8 +85,9 @@ func NewStore(options StoreOptions) *Store {
 
 func (s *Store) HasKey(key string) bool {
 	pathKey := s.PathTransformFunction(key)
+	fullPath := fmt.Sprintf("%s/%s", s.Root, pathKey.FullPath())
 
-	_, err := os.Stat(pathKey.FullPath())
+	_, err := os.Stat(fullPath)
 
 	if err == fs.ErrNotExist {
 		return false
