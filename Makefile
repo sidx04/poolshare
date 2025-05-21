@@ -7,5 +7,5 @@ run: build
 test:
 	go test ./... -v
 
-delfoobar: 
-	rm -rf foobar
+delfoo: 
+	rm -rf foo*

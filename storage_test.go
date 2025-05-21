@@ -22,7 +22,7 @@ func TestPathTransformFunction(t *testing.T) {
 
 func TestStoreWrite(t *testing.T) {
 	storeOpts := StoreOptions{
-		// Root:                  "foobar",
+		Root:                  "foobaz",
 		PathTransformFunction: CASPathTransform,
 	}
 	s := NewStore(storeOpts)
@@ -66,6 +66,7 @@ func TestStoreDelete(t *testing.T) {
 		t.Error(err)
 	}
 
+	// delete the key
 	if err := s.Delete(key); err != nil {
 		t.Error(err)
 	}

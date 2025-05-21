@@ -40,16 +40,16 @@ type PathKey struct {
 	Filename string
 }
 
-func (p *PathKey) FirstPathName() (string, string) {
+func (p *PathKey) FirstPathName() string {
 	paths := strings.Split(p.PathName, "/")
 	if len(paths) == 0 {
-		return "", ""
+		return ""
 	}
-	return paths[0], paths[1]
+	return paths[0]
 }
 
 func (p *PathKey) FullPath() string {
-	return fmt.Sprintf("%s/%s", p.PathName, p.Filename) // use first 10 characters of the hash as the filename
+	return fmt.Sprintf("%s/%s", p.PathName, p.Filename[:10]) // use first 10 characters of the hash as the filename
 }
 
 type StoreOptions struct {
@@ -112,18 +112,20 @@ func (s *Store) Read(key string) (io.Reader, error) {
 
 func (s *Store) readStream(key string) (io.ReadCloser, error) {
 	pathKey := s.PathTransformFunction(key)
-	return os.Open(s.Root + "/" + pathKey.FullPath())
+	return os.Open(fmt.Sprintf("%s/%s", s.Root, pathKey.FullPath()))
 
 }
 
 func (s *Store) writeStream(key string, r io.Reader) error {
 	pathKey := s.PathTransformFunction(key)
 
-	if err := os.MkdirAll(s.Root+"/"+pathKey.PathName, os.ModePerm); err != nil {
+	pathNameWithRoot := fmt.Sprintf("%s/%s", s.Root, pathKey.PathName)
+
+	if err := os.MkdirAll(pathNameWithRoot, os.ModePerm); err != nil {
 		return err
 	}
 
-	fullPath := s.Root + "/" + pathKey.FullPath()
+	fullPath := fmt.Sprintf("%s/%s", s.Root, pathKey.FullPath())
 
 	f, err := os.Create(fullPath)
 	if err != nil {
@@ -143,10 +145,11 @@ func (s *Store) writeStream(key string, r io.Reader) error {
 func (s *Store) Delete(key string) error {
 	path := s.PathTransformFunction(key)
 
+	fullPath := fmt.Sprintf("%s/%s", s.Root, path.FirstPathName())
+
 	defer func() {
-		log.Printf("Deleted [%s] from disk", path.FullPath())
+		log.Printf("Deleted [%s] from disk", fullPath)
 	}()
 
-	prelude, pathStart := path.FirstPathName()
-	return os.RemoveAll(prelude + "/" + pathStart)
+	return os.RemoveAll(s.Root)
 }
