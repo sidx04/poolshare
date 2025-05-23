@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,57 +22,59 @@ func TestPathTransformFunction(t *testing.T) {
 }
 
 func TestStoreWrite(t *testing.T) {
-	storeOpts := StoreOptions{
-		Root:                  "foobaz",
-		PathTransformFunction: CASPathTransform,
-	}
-	s := NewStore(storeOpts)
+	s := newStore()
+	// defer teardownStore(t, s)
 
-	key := "foobar"
-	data := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
+	for i := 0; i < 10; i++ {
+		key := fmt.Sprintf("foobar_%d", i)
 
-	// write data
-	if err := s.writeStream("foobar", bytes.NewReader(data)); err != nil {
-		t.Error(err)
-	}
+		data := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
 
-	// read the same data
-	r, err := s.readStream(key)
+		// write data
+		if err := s.writeStream(key, bytes.NewReader(data[i:])); err != nil {
+			t.Error(err)
+		}
 
-	if err != nil {
-		t.Error(err)
-	}
+		// read the same data
+		r, err := s.readStream(key)
 
-	if ok := s.HasKey(key); !ok {
-		t.Errorf("Expected to have [%s] key:\n", key)
-	}
+		if err != nil {
+			t.Error(err)
+		}
 
-	b, _ := io.ReadAll(r)
+		if ok := s.HasKey(key); !ok {
+			t.Errorf("Expected to have [%s] key:\n", key)
+		}
 
-	fmt.Println(string(b))
+		b, _ := io.ReadAll(r)
 
-	if string(b) != string(data) {
-		t.Errorf("Wanted: %s, Got: %s", data, b)
+		if string(b) != string(data[i:]) {
+			t.Errorf("Wanted: %s, Got: %s", data, b)
+
+		}
+
+		if err := s.Delete(key); err != nil {
+			t.Error(err)
+		}
+
+		if ok := s.HasKey(key); ok {
+			t.Errorf("Expected to NOT have [%s] key...\n", key)
+		}
 	}
 }
 
-func TestStoreDelete(t *testing.T) {
+func newStore() *Store {
 	storeOpts := StoreOptions{
 		Root:                  "foobar",
 		PathTransformFunction: CASPathTransform,
 	}
-	s := NewStore(storeOpts)
 
-	key := "foobar"
-	data := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
+	return NewStore(storeOpts)
+}
 
-	// write data
-	if err := s.writeStream("foobar", bytes.NewReader(data)); err != nil {
-		t.Error(err)
-	}
-
-	// delete the key
-	if err := s.Delete(key); err != nil {
+func teardownStore(t *testing.T, s *Store) {
+	log.Printf("Tearing down store [%s]...", s.Root)
+	if err := s.Clear(); err != nil {
 		t.Error(err)
 	}
 }
