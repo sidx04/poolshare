@@ -25,13 +25,13 @@ func TestStoreWrite(t *testing.T) {
 	s := newStore()
 	// defer teardownStore(t, s)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := fmt.Sprintf("foobar_%d", i)
 
 		data := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
 
 		// write data
-		if err := s.writeStream(key, bytes.NewReader(data[i:])); err != nil {
+		if err := s.Write(key, bytes.NewReader(data[i:])); err != nil {
 			t.Error(err)
 		}
 

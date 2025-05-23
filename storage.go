@@ -89,11 +89,12 @@ func (s *Store) HasKey(key string) bool {
 
 	_, err := os.Stat(fullPath)
 
-	if errors.Is(err, os.ErrNotExist) {
-		return false
-	}
+	return !errors.Is(err, os.ErrNotExist)
+}
 
-	return true
+func (s *Store) Write(key string, r io.Reader) error {
+	return s.writeStream(key, r)
+
 }
 
 func (s *Store) Read(key string) (io.Reader, error) {
