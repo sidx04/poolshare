@@ -33,7 +33,7 @@ func CASPathTransform(key string) PathKey {
 	}
 }
 
-type PathTransform func(string) PathKey
+type PathTransformFunc func(string) PathKey
 
 type PathKey struct {
 	PathName string
@@ -56,7 +56,7 @@ type StoreOptions struct {
 	// Root is the folder name of the root directory,
 	// containing all the files of the system.
 	Root              string
-	PathTransformFunc PathTransform
+	PathTransformFunc PathTransformFunc
 }
 
 var DefaultPathTransformFunc = func(key string) PathKey {
