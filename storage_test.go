@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPathTransformFunction(t *testing.T) {
+func TestPathTransformFunc(t *testing.T) {
 	key := "foobar"
 	pathname := CASPathTransform(key)
 	expectedFilename := "8843d7f92416211de9ebb963ff4ce28125932878"
@@ -23,7 +23,7 @@ func TestPathTransformFunction(t *testing.T) {
 
 func TestStoreWrite(t *testing.T) {
 	s := newStore()
-	// defer teardownStore(t, s)
+	defer teardownStore(t, s)
 
 	for i := range 10 {
 		key := fmt.Sprintf("foobar_%d", i)
@@ -65,8 +65,8 @@ func TestStoreWrite(t *testing.T) {
 
 func newStore() *Store {
 	storeOpts := StoreOptions{
-		Root:                  "foobar",
-		PathTransformFunction: CASPathTransform,
+		Root:              "foobar",
+		PathTransformFunc: CASPathTransform,
 	}
 
 	return NewStore(storeOpts)
