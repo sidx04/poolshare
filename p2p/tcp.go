@@ -1,7 +1,9 @@
 package p2p
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net"
 )
 
@@ -30,7 +32,7 @@ type TCPTransportOptions struct {
 	ListenerAddress string
 	HandshakeFunc   HandshakeFunc
 	Decoder         Decoder
-	OnPeer          func(Peer) error
+	OnPeer          func(*TCPPeer) error
 }
 
 type TCPTransport struct {
@@ -64,30 +66,53 @@ func (t *TCPTransport) ListenAndAccept() error {
 
 	go t.startAcceptLoop()
 
+	log.Printf("TCP Transport listening on port: %s\n", t.ListenerAddress)
+
 	return nil
 
+}
+
+// Close implements the Transport interface
+func (t *TCPTransport) Close() error {
+	return t.listener.Close()
+}
+
+// Dial implements the Transport interface
+func (t *TCPTransport) Dial(addr string) error {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	go t.handleConnection(conn, true)
+
+	return nil
 }
 
 func (t *TCPTransport) startAcceptLoop() {
 	for {
 		connection, err := t.listener.Accept()
 
+		if errors.Is(err, net.ErrClosed) {
+			return
+		}
+
 		if err != nil {
 			fmt.Printf("TCP Accept Error: %s\n", err)
 		}
 
-		go t.handleConnection(connection)
+		go t.handleConnection(connection, false)
 
 		fmt.Printf("New incoming connection: %+v...\n", connection)
 
 	}
 }
 
-func (t *TCPTransport) handleConnection(connection net.Conn) {
+func (t *TCPTransport) handleConnection(connection net.Conn, outbound bool) {
 	var err error
 
 	defer func() {
-		fmt.Printf("Dropping Peer connection %s\n", err)
+		fmt.Printf("Dropping Peer connection %x\n", err)
 		connection.Close()
 	}()
 
@@ -119,5 +144,4 @@ func (t *TCPTransport) handleConnection(connection net.Conn) {
 
 		fmt.Printf("RPC: %+v\n", rpc)
 	}
-
 }
