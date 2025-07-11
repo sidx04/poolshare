@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"poolshare/p2p"
+	"time"
 )
 
 func onPeer(p p2p.Peer) error {
@@ -20,7 +22,7 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 	tcpTransport := p2p.NewTCPTransport(tcpTransportOptions)
 
 	fileServerOptions := FileServerOptions{
-		StorageRoot:       listenAddr + "network",
+		StorageRoot:       listenAddr + "_network",
 		PathTransformFunc: CASPathTransform,
 		Transport:         tcpTransport,
 		BootstrapNodes:    nodes,
@@ -37,9 +39,21 @@ func main() {
 	s1 := makeServer(":8080", "")
 	s2 := makeServer(":8081", ":8080")
 
+	time.Sleep(2 * time.Second)
+
 	go func() {
 		log.Fatal(s1.Start())
 	}()
 
-	s2.Start()
+	time.Sleep(2 * time.Second)
+
+	go s2.Start()
+
+	time.Sleep(2 * time.Second)
+
+	data := bytes.NewReader([]byte("abc"))
+
+	s2.StoreData("foo", data)
+
+	select {}
 }

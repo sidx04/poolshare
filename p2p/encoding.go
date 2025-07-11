@@ -11,7 +11,7 @@ type Decoder interface {
 
 type GOBDecoder struct{}
 
-func (d GOBDecoder) Decode(r io.Reader, msg RPC) error {
+func (d GOBDecoder) Decode(r io.Reader, msg *RPC) error {
 	return gob.NewDecoder(r).Decode(msg)
 }
 
